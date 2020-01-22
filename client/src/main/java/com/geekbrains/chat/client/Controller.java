@@ -20,7 +20,9 @@ public class Controller implements Initializable {
     TextField msgField;
 
     private Network network;
+    private boolean online=true;
     public void sendMsg(ActionEvent actionEvent) {
+        if(online)
         try{
             network.sendMsg(msgField.getText());
             msgField.clear();
@@ -37,11 +39,12 @@ try{
     network=new Network(8189);
     new Thread(()->{
         try {
-            while (true){
+            while (online){
                         String msg = network.returnMsg();
-                        if(msg.equals("/end")){
-                            network.close();
-                        }
+                if(msg.equals("Сервер выключен")){
+                    online=false;
+                    network.close();
+                }
                 Platform.runLater(()-> {
                     textArea.appendText(msg + "\n");
                 });
@@ -53,7 +56,8 @@ try{
                         });
                     }finally {
             network.close();
-        }
+        }//не понял как лучше? по идее он и так закроет соединение после exception. В таком варианте вроде без exception
+        //из вопросов только maven не ясно что это, но видимо позже узнаем.
     }).start();
 } catch (IOException e) {
     throw new RuntimeException("Невозможно подключиться к серверу");

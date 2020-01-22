@@ -17,9 +17,8 @@ public class MainApp {
             while (true){
                 String x=in.readUTF();
                 if(x.equals("/end")){
-                    out.writeUTF("сервер выключен");
-                    out.writeUTF("/end");
-                    Thread.sleep(2000);
+                    out.writeUTF("Сервер выключен");
+                    Thread.sleep(200);
                     out.close();
                     in.close();
                     socket.close();
