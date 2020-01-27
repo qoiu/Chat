@@ -31,6 +31,7 @@ public class Server {
 
         public synchronized boolean isNickBusy(String nick) {
         for(ClientHandler o:clients){
+
             if(o.getName().equals(nick)){
                 return true;
             }
@@ -47,7 +48,7 @@ public class Server {
             o.sendMsg(s);
         }
     }
-    /*
+
     public ClientHandler getClient(String nick){
         for (ClientHandler o:clients){
             if(o.getName().equals(nick))
@@ -55,7 +56,7 @@ public class Server {
         }
         return null;
     }
-*/
+
 
     public void unsubscribe(ClientHandler clientHandler) {
         clients.remove(clientHandler);

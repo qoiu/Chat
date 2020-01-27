@@ -7,6 +7,7 @@ public interface AuthService {
     void start();
     String getNickByLoginPass(String login,String pass);
     void stop();
+    void changeNick(String name,String nick);
 }
 class BaseAuthService implements AuthService {//класс с интерфейсом AuthService??
     private class Entry{//Вложеный класс Entry login,pass,nick
@@ -19,6 +20,7 @@ class BaseAuthService implements AuthService {//класс с интерфейс
         this.nick = nick;
     }
 }
+
     private List<Entry> entries;//список пользователей
 
     public BaseAuthService() {//создаём экземпляр BAS и заполняем его задаными пользователями
@@ -44,5 +46,12 @@ class BaseAuthService implements AuthService {//класс с интерфейс
     @Override
     public void stop() {//тоже просто сообщение)
         System.out.println("Сервис аутентификации остановлен");
+    }
+
+    @Override
+    public void changeNick(String name,String nick) {
+        for(Entry o:entries){
+            if(o.nick.equals(name))o.nick=nick;
+        }
     }
 }
