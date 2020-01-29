@@ -31,7 +31,6 @@ public class Server {
 
         public synchronized boolean isNickBusy(String nick) {
         for(ClientHandler o:clients){
-
             if(o.getName().equals(nick)){
                 return true;
             }
@@ -39,16 +38,30 @@ public class Server {
         return false;
     }
 
-    public synchronized void subscribe(ClientHandler clientHandler) {
-        clients.add(clientHandler);
+    public void whisp(ClientHandler from, String to,String msg){
+        if(isNickBusy(to)){
+            getClient(to).sendMsg(from.getName() +"(whisp): "+msg);
+            from.sendMsg("to " + to +": "+msg);
+        }else{
+            from.sendMsg("Неверное имя пользователя");
+        }
     }
+
 
     public synchronized void broadcastMsg(String s) {
         for (ClientHandler o:clients){
             o.sendMsg(s);
         }
     }
-
+    public void sendClientListlist(){
+        StringBuilder msg=new StringBuilder();
+        msg.append("/cList ");
+        for (ClientHandler o:clients){
+            msg.append(o.getName()).append(" ");
+        }
+        msg.setLength(msg.length()-1);
+        broadcastMsg(msg.toString());
+    }
     public ClientHandler getClient(String nick){
         for (ClientHandler o:clients){
             if(o.getName().equals(nick))
@@ -57,8 +70,12 @@ public class Server {
         return null;
     }
 
-
+    public synchronized void subscribe(ClientHandler clientHandler) {
+        clients.add(clientHandler);
+        sendClientListlist();
+    }
     public void unsubscribe(ClientHandler clientHandler) {
         clients.remove(clientHandler);
+        sendClientListlist();
     }
 }

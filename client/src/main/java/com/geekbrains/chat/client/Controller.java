@@ -25,85 +25,146 @@ public class Controller implements Initializable {
     @FXML
     PasswordField pfPass;
 
-
+    @FXML
+    ListView lwLUsers;
+    private Thread timeout;
     private Network network;
+    private boolean authorized;
+    private void setAuthorized(boolean authorized) {
+        if(!authorized)Platform.runLater(()->{ lwLUsers.getItems().clear();});
+        if(authorized){
+            timeout.interrupt();
+        }else{
+            timeout=new Thread(()->{
+                try {
+                    Thread.sleep(12000);
+                    try{
+                        network.sendMsg("/end");
+                    }catch (IOException e){
+                        e.printStackTrace();
+                    }
+                    network.close();
+                   // System.exit(0);
+                } catch (InterruptedException e) {
+                    System.out.println("Авторизован");
+                }
+            });
+        timeout.start();
+        }
+        this.authorized = authorized;
+        msgField.setVisible(authorized);
+        msgField.setManaged(authorized);
+        hBox.setVisible(!authorized);
+        hBox.setManaged(!authorized);
+    }
+
     public void sendMsg(ActionEvent actionEvent) {
         try{
             if(msgField.getText().trim().length()>0){
                 String msg=msgField.getText();
-                if(msg.startsWith("/")) {
-                    String[] parts=msg.split(" ");
-                    if(parts.length==1) {
-                        textArea.appendText("Ошибка в команде\n");
-                        return;
-                    }
-                }
-                    network.sendMsg(msg);
-                    msgField.clear();
-                    msgField.requestFocus();
+                if(msg.startsWith("/") && !correctCmd(msg))return;
+                network.sendMsg(msg);
+                msgField.clear();
+                msgField.requestFocus();
             }
         }catch (IOException e){
             Alert alert= new Alert(AlertType.WARNING,"Не удалось отправить сообщение. Проверьте подключение к серверу.");
             alert.show();
         }
     }
+    private boolean correctCmd(String msg){
+        if(msg.startsWith("/end") && msg.length()==4)return true;
+        if(msg.startsWith("/name ") && msg.trim().length()>5){
+            String[] parts= msg.split(" ",2);
+            if(!parts[1].startsWith("/")&&!parts[1].contains(" "))return true;
+        }
+        if(msg.startsWith("/w ")){
+            String[] parts= msg.split(" ",3 );
+            if(parts.length>2)
+                if(parts[1].length()>0 && parts[2].length()>0)return true;
+        }
+        return false;
+    }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-try{
-    network=new Network(8189);
 
-    Thread t=new Thread(()->{
-        try {
-            while (true){
-                String msg = network.returnMsg();
-                if(msg.startsWith("/authok")){
-                    String[] parts= msg.split(" " );
-                    network.setAuthorized(true);
-                    textArea.appendText("Вы вошли в чат как "+parts[1]+"\n");
-                    msgField.setVisible(true);
-                    hBox.setVisible(false);
-                    Platform.runLater( () -> {
-                        msgField.requestFocus();
-                        Main.getPrimaryStage().setTitle(parts[1]);} );
-                    break;
-                }
-                textArea.appendText(msg+"\n");
-                Platform.runLater( () -> {
-                    tfLogin.requestFocus();});
+        setAuthorized(false);
+        tryConnection();
+        lwLUsers.setOnMouseClicked(event -> {
+            if(event.getClickCount()==2){
+                msgField.setText("/w " +lwLUsers.getSelectionModel().getSelectedItem()+" ");
+                msgField.requestFocus();
+                msgField.selectEnd();
             }
-            while (true){
-                String msg = network.returnMsg();
-                String[] parts=msg.split(" ");
+        });
+    }
 
-                    switch (parts[0]){
-                        case "/end":
-                            return;
-                        case "/name":
-                            Platform.runLater( () -> {Main.getPrimaryStage().setTitle(parts[1]);} );
+    public void tryConnection(){
+        try{
+            network=new Network(8189);
+            Thread t=new Thread(()->{
+                try {
+                    while (true){
+                        String msg = network.returnMsg();
+                        if(msg.startsWith("/authok")){
+                            String[] parts= msg.split(" " );
+                            setAuthorized(true);
+                            network.setNick(parts[1]);
+                            textArea.appendText("Вы вошли в чат как "+parts[1]+"\n");
+                            Platform.runLater( () -> {
+                                msgField.requestFocus();
+                                Main.getPrimaryStage().setTitle(parts[1]);} );
                             break;
-                        default:textArea.appendText(msg + "\n");
-                        break;
+                        }
+                        textArea.appendText(msg+"\n");
+                        Platform.runLater( () -> {
+                            tfLogin.requestFocus();});
                     }
-                }
-    } catch (IOException e) {
-            e.printStackTrace();
-                        Platform.runLater(()->{
-                            Alert alert= new Alert(AlertType.WARNING,"Соединение с сервером разорвано");
-                            alert.show();
-                        });
-                    }
-    });
-    t.setDaemon(true);
-    t.start();
+                    while (authorized){
+                        String msg = network.returnMsg();
+                        if(msg.equals("/end"))return;
+                        if(msg.startsWith("/name ")){
+                            String[] parts=msg.split(" ",2);
+                            network.setNick(parts[1]);
+                            Platform.runLater( () -> {Main.getPrimaryStage().setTitle(parts[1]);} );
+                        }else if(msg.startsWith("/cList ")){
+                            String[] parts= msg.substring(7).split(" " );
+                            Platform.runLater(()->{
+                                lwLUsers.getItems().clear();
+                                for(String p:parts){
+                                    if(!network.getNick().equals(p))
+                                        lwLUsers.getItems().add(p);
+                                }
+                            });
 
-} catch (IOException e) {
-    throw new RuntimeException("Невозможно подключиться к серверу");
-}
+                        } else {
+                            textArea.appendText(msg + "\n");
+                        }
+                    }
+                } catch (IOException e) {
+                   // e.printStackTrace();
+                    Platform.runLater(()->{
+                        Alert alert= new Alert(AlertType.WARNING,"Соединение с сервером разорвано");
+                        alert.show();
+                    });
+                } finally {
+                    setAuthorized(false);
+                    network.close();
+                    tryConnection();
+                }
+            });
+            t.setDaemon(true);
+            t.start();
+
+        } catch (IOException e) {
+            throw new RuntimeException("Невозможно подключиться к серверу");
+        }
     }
 
     public void authStart(ActionEvent actionEvent) {
-        try{
+        if(tfLogin.getText().length()>0 && pfPass.getText().length()>0)
+            try{
             network.sendMsg("/auth "+tfLogin.getText()+ " "+pfPass.getText());
             tfLogin.clear();
             pfPass.clear();

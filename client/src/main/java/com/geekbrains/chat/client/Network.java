@@ -9,17 +9,20 @@ public class Network {
     private DataInputStream in;
     private DataOutputStream out;
     Socket socket;
-    boolean authorized;
+    private String nick;
 
-    public void setAuthorized(boolean authorized) {
-        this.authorized = authorized;
+    public void setNick(String nick) {
+        this.nick = nick;
+    }
+
+    public String getNick() {
+        return nick;
     }
 
     public Network(int port) throws IOException {
         socket=new Socket("localhost",port);
         out=new DataOutputStream(socket.getOutputStream());
         in=new DataInputStream(socket.getInputStream());
-        authorized=false;
     }
     public void sendMsg(String msg) throws IOException{
         out.writeUTF(msg);
@@ -49,5 +52,4 @@ public class Network {
             }
         }
     }
-
 }

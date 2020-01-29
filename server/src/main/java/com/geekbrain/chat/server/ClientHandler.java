@@ -69,31 +69,31 @@ public class ClientHandler {
     public void readMessages() throws IOException{
         while (true){
             String strFromClient=in.readUTF();
-            System.out.println("от " + name + ": "+strFromClient);
-            String[] parts= strFromClient.split(" " );
-            switch (parts[0]){
-                case "/w":
-                    if(server.isNickBusy(parts[1])){
-                        String msg=strFromClient.replace("/w "+parts[1],"");
-                        server.getClient(parts[1]).sendMsg( name +"(whisp): "+msg);
-                        break;
-                    }else{
-                        sendMsg("Неверное имя пользователя");
-                        break;
-                    }
-                case "/name":
-                    if(!server.isNickBusy(parts[1])){
-                        server.broadcastMsg(name + " поменял ник на "+parts[1]);
-                        server.getAuthService().changeNick(name,parts[1]);
-                        sendMsg("/name" + " "+ parts[1]);
-                        name=parts[1];
-                        break;
-                    }
-                case "/end":
+            System.out.println("от " + name + ":"+strFromClient);
+            if(strFromClient.startsWith("/")){
+                if(strFromClient.equals("/end")){
+                    sendMsg("/end");
+                    closeConnection();
                     return;
-                default:
-                    server.broadcastMsg(name + ": "+strFromClient);
-                    break;
+                }
+                if(strFromClient.startsWith("/w ")){
+                    String[] parts= strFromClient.split(" " ,3);
+                    server.whisp(this,parts[1],parts[2]);
+                }
+                if(strFromClient.startsWith("/name ")){
+                    String[] parts= strFromClient.split(" " ,2);
+                        if(server.getAuthService().changeNick(name,parts[1])){
+                            System.out.println("Меняем ник"+name+" на " + parts[1]);
+                            server.broadcastMsg(name + " поменял ник на "+parts[1]);
+                            sendMsg("/name" + " "+ parts[1]);
+                            name=parts[1];
+                            server.sendClientListlist();
+                        }else {
+                            sendMsg("Даное имя пользователя уже занято");
+                        }
+                }
+            }else{
+                server.broadcastMsg(name + ": "+strFromClient);
             }
         }
     }//читаем сообщения из чата и перечылаем всем участникам. Если \енд, то перестаём читать.
@@ -105,6 +105,7 @@ public class ClientHandler {
             e.printStackTrace();
         }
     }//послать месседж объекту этого класса
+
 public void closeConnection(){
         server.unsubscribe(this);
         server.broadcastMsg(name+" покинул чат");

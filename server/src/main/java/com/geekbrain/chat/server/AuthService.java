@@ -7,7 +7,7 @@ public interface AuthService {
     void start();
     String getNickByLoginPass(String login,String pass);
     void stop();
-    void changeNick(String name,String nick);
+    boolean changeNick(String name,String nick);
 }
 class BaseAuthService implements AuthService {//класс с интерфейсом AuthService??
     private class Entry{//Вложеный класс Entry login,pass,nick
@@ -49,9 +49,13 @@ class BaseAuthService implements AuthService {//класс с интерфейс
     }
 
     @Override
-    public void changeNick(String name,String nick) {
+    public boolean changeNick(String name,String nick) {
         for(Entry o:entries){
-            if(o.nick.equals(name))o.nick=nick;
+            if(o.nick.equals(name)){
+                o.nick=nick;
+                return true;
+            }
         }
+        return false;
     }
 }
