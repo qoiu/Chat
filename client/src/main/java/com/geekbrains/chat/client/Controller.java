@@ -37,7 +37,7 @@ public class Controller implements Initializable {
         }else{
             timeout=new Thread(()->{
                 try {
-                    Thread.sleep(12000);
+                    Thread.sleep(120000);
                     try{
                         network.sendMsg("/end");
                     }catch (IOException e){

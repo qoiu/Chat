@@ -15,7 +15,7 @@ public class Server {
     }
    public Server(int port) {//создаётся один раз в мейне
         try (ServerSocket serverSocket = new ServerSocket(port)) {//пробуем подключиться, отлавливаем ексепшены
-            authService = new BaseAuthService();//создаём объект BaseAuthService. В объекте лежат 3 доступных пользователя
+            authService = new DBAuthService();//создаём объект BaseAuthService. В объекте лежат 3 доступных пользователя
             authService.start();//просто вывели сообщение что мы ждём очередного пользователя
             clients = new ArrayList<>();//создали 1 массив клиентов...далее ьудем работать с ним
             while (true) {//в цикле ждём новых клиентов
