@@ -10,6 +10,7 @@ import javafx.scene.layout.HBox;
 
 import java.io.*;
 import java.net.URL;
+import java.util.LinkedList;
 import java.util.ResourceBundle;
 
 
@@ -90,7 +91,6 @@ public class Controller implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-
         setAuthorized(false);
         tryConnection();
         lwLUsers.setOnMouseClicked(event -> {
@@ -186,20 +186,25 @@ public class Controller implements Initializable {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
+
     private String restoreChatFromLog(){
         File file=new File("history_" + network.getNick() + ".txt");
+        LinkedList list=new LinkedList();
         StringBuilder str=new StringBuilder();
         if(file.exists())
         try (BufferedReader in = new BufferedReader(new FileReader(file))) {
             String msg;
             while ((msg=in.readLine())!=null){
-                System.out.println(msg);
-                str.append(msg).append("\n");
+                list.addFirst(msg);
             }
         } catch (IOException e) {
             e.printStackTrace();
+        }
+        if(list.size()==0) return "";
+        int size= Math.min(list.size(), 100);
+        for (int i=size-1;i>=0;i--){
+            str.append(list.get(i)).append("\n");
         }
         return str.toString();
     }
