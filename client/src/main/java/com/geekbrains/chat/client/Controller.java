@@ -8,7 +8,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.HBox;
 
-import java.io.IOException;
+import java.io.*;
 import java.net.URL;
 import java.util.ResourceBundle;
 
@@ -31,7 +31,9 @@ public class Controller implements Initializable {
     private Network network;
     private boolean authorized;
     private void setAuthorized(boolean authorized) {
-        if(!authorized)Platform.runLater(()->{ lwLUsers.getItems().clear();});
+        if(!authorized)Platform.runLater(()->{
+            msgField.clear();
+            lwLUsers.getItems().clear();});
         if(authorized){
             timeout.interrupt();
         }else{
@@ -111,6 +113,7 @@ public class Controller implements Initializable {
                             String[] parts= msg.split(" " );
                             setAuthorized(true);
                             network.setNick(parts[1]);
+                            textArea.appendText(restoreChatFromLog());
                             textArea.appendText("Вы вошли в чат как "+parts[1]+"\n");
                             Platform.runLater( () -> {
                                 msgField.requestFocus();
@@ -123,7 +126,10 @@ public class Controller implements Initializable {
                     }
                     while (authorized){
                         String msg = network.returnMsg();
-                        if(msg.equals("/end"))return;
+                        if(msg.equals("/end")){
+                            setAuthorized(false);
+                            return;
+                        }
                         if(msg.startsWith("/name ")){
                             String[] parts=msg.split(" ",2);
                             network.setNick(parts[1]);
@@ -140,6 +146,7 @@ public class Controller implements Initializable {
 
                         } else {
                             textArea.appendText(msg + "\n");
+                            writeToLog(msg);
                         }
                     }
                 } catch (IOException e) {
@@ -172,5 +179,28 @@ public class Controller implements Initializable {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    private void writeToLog(String msg) {
+        try (BufferedWriter out = new BufferedWriter(new FileWriter("history_" + network.getNick() + ".txt", true))) {
+            out.write(msg + "\n");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+    private String restoreChatFromLog(){
+        File file=new File("history_" + network.getNick() + ".txt");
+        StringBuilder str=new StringBuilder();
+        if(file.exists())
+        try (BufferedReader in = new BufferedReader(new FileReader(file))) {
+            String msg;
+            while ((msg=in.readLine())!=null){
+                System.out.println(msg);
+                str.append(msg).append("\n");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return str.toString();
     }
 }
