@@ -32,28 +32,19 @@ public class Controller implements Initializable {
     private Network network;
     private boolean authorized;
     private void setAuthorized(boolean authorized) {
-        if(!authorized)Platform.runLater(()->{
-            msgField.clear();
-            lwLUsers.getItems().clear();});
-        if(authorized){
-            timeout.interrupt();
-        }else{
-            timeout=new Thread(()->{
-                try {
-                    Thread.sleep(120000);
-                    try{
-                        network.sendMsg("/end");
-                    }catch (IOException e){
-                        e.printStackTrace();
-                    }
-                    network.close();
-                   // System.exit(0);
-                } catch (InterruptedException e) {
-                    System.out.println("Авторизован");
-                }
+        if (!authorized){
+            Platform.runLater(() -> {
+                msgField.clear();
+                textArea.clear();
+                lwLUsers.getItems().clear();
+                Main.getPrimaryStage().setTitle("January chat");
             });
-        timeout.start();
+        }else{
+            Platform.runLater( () -> {
+                msgField.requestFocus();
+                Main.getPrimaryStage().setTitle(network.getNick());} );
         }
+
         this.authorized = authorized;
         msgField.setVisible(authorized);
         msgField.setManaged(authorized);
@@ -115,9 +106,6 @@ public class Controller implements Initializable {
                             network.setNick(parts[1]);
                             textArea.appendText(restoreChatFromLog());
                             textArea.appendText("Вы вошли в чат как "+parts[1]+"\n");
-                            Platform.runLater( () -> {
-                                msgField.requestFocus();
-                                Main.getPrimaryStage().setTitle(parts[1]);} );
                             break;
                         }
                         textArea.appendText(msg+"\n");

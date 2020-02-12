@@ -5,26 +5,16 @@ import java.sql.*;
 public class DBAuthService implements AuthService{
     private static Connection connection;
     private static Statement stmt;
-    private static PreparedStatement ps;
+    private static PreparedStatement psGetNickByLogPass,psChangeNick;
     public DBAuthService() {
-        try{
-            Class.forName("org.sqlite.JDBC");
-            connection= DriverManager.getConnection("jdbc:sqlite:server/src/main/resources/users.db");
-            stmt=connection.createStatement();
-        } catch (ClassNotFoundException | SQLException e) {
-            e.printStackTrace();
-            disconnect();
-        }
     }
 
     @Override
     public String getNickByLoginPass(String login, String pass) {
-        String nick;
         try{
-            ResultSet rs= stmt.executeQuery("SELECT*FROM users WHERE name='"+login+"' AND password='"+pass+"';");
-            nick=rs.getString("nick");
-            rs.close();
-            return nick;
+            psGetNickByLogPass.setString(1,login);
+            psGetNickByLogPass.setString(2,pass);
+            return psGetNickByLogPass.executeQuery().getString("nick");
         } catch (SQLException e) {
             return null;
         }
@@ -32,6 +22,16 @@ public class DBAuthService implements AuthService{
 
     @Override
     public void start() {
+        try{
+            Class.forName("org.sqlite.JDBC");
+            connection= DriverManager.getConnection("jdbc:sqlite:server/src/main/resources/users.db");
+            stmt=connection.createStatement();
+            psChangeNick=connection.prepareStatement("Update users SET nick=? WHERE nick=?");
+            psGetNickByLogPass=connection.prepareStatement("SELECT*FROM users WHERE name=? AND password=?;");
+        } catch (ClassNotFoundException | SQLException e) {
+            e.printStackTrace();
+            disconnect();
+        }
         System.out.println("Сервис аутентификации запущен");
     }
     @Override
@@ -42,11 +42,9 @@ public class DBAuthService implements AuthService{
     @Override
     public boolean changeNick(String name,String nick) {
         try {
-            PreparedStatement us=connection.prepareStatement("Update users SET nick=? WHERE nick=?");
-            us.setString(1,nick);
-            us.setString(2,name);
-            us.executeUpdate();
-            us.close();
+            psChangeNick.setString(1,nick);
+            psChangeNick.setString(2,name);
+            psChangeNick.executeUpdate();
             return  true;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -55,8 +53,11 @@ public class DBAuthService implements AuthService{
     }
     private void disconnect() {
         try{
-            if(ps!=null){
-                ps.close();
+            if(psChangeNick!=null){
+                psChangeNick.close();
+            }
+            if(psGetNickByLogPass!=null){
+                psGetNickByLogPass.close();
             }
             if(stmt!=null) {
                 stmt.close();
