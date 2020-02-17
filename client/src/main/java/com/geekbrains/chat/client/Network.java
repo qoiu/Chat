@@ -9,7 +9,15 @@ public class Network {
     private DataInputStream in;
     private DataOutputStream out;
     Socket socket;
-    private String nick;
+    private String nick,user;
+
+    public void setUser(String user) {
+        this.user = user;
+    }
+
+    public String getUser() {
+        return user;
+    }
 
     public void setNick(String nick) {
         this.nick = nick;
