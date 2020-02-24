@@ -1,11 +1,15 @@
 package com.geekbrain.chat.server;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.sql.*;
 
 public class DBAuthService implements AuthService{
     private static Connection connection;
     private static Statement stmt;
     private static PreparedStatement psGetNickByLogPass,psChangeNick;
+    private static final Logger LOGGER= LogManager.getLogger(DBAuthService.class);
     public DBAuthService() {
     }
 
@@ -32,12 +36,12 @@ public class DBAuthService implements AuthService{
             e.printStackTrace();
             disconnect();
         }
-        System.out.println("Сервис аутентификации запущен");
-    }
+        LOGGER.info("Сервис аутентификации запущен");
+}
     @Override
     public void stop() {
         disconnect();
-        System.out.println("Сервис аутентификации остановлен");
+        LOGGER.info("Сервис аутентификации остановен");
     }
     @Override
     public boolean changeNick(String name,String nick) {
