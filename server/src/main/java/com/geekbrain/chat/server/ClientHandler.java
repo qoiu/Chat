@@ -1,17 +1,20 @@
 package com.geekbrain.chat.server;
 
-import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 
+
 public class ClientHandler {
     private Server server;
     private Socket socket;
     private DataInputStream in;
     private DataOutputStream out;
+    private static final Logger LOGGER= LogManager.getLogger(ClientHandler.class);
 
     private String name;
 
@@ -69,7 +72,7 @@ public class ClientHandler {
     public void readMessages() throws IOException{
         while (true){
             String strFromClient=in.readUTF();
-            System.out.println("от " + name + ":"+strFromClient);
+            LOGGER.trace("от " + name + ":"+strFromClient);
             if(strFromClient.startsWith("/")){
                 if(strFromClient.equals("/end")){
                     sendMsg("/end");
@@ -83,7 +86,7 @@ public class ClientHandler {
                 if(strFromClient.startsWith("/name ")){
                     String[] parts= strFromClient.split(" " ,2);
                         if(server.getAuthService().changeNick(name,parts[1])){
-                            System.out.println("Меняем ник"+name+" на " + parts[1]);
+                            LOGGER.trace("Меняем ник"+name+" на " + parts[1]);
                             server.broadcastMsg(name + " поменял ник на "+parts[1]);
                             sendMsg("/name" + " "+ parts[1]);
                             name=parts[1];

@@ -76,8 +76,25 @@ public class Controller implements Initializable {
             String[] parts= msg.split(" ",3 );
             if(parts.length>2)
                 if(parts[1].length()>0 && parts[2].length()>0)return true;
+        }if(msg.startsWith("/spam ")){
+            spamBot(Integer.parseInt(msg.substring(6)));
         }
         return false;
+    }
+    private void spamBot(int sleep){
+        new Thread(()->{
+            long z = 0;
+            while(z<100_000){
+                z+=1;
+                try {
+                    network.sendMsg("hi "+z);
+                    Thread.sleep(sleep);
+                } catch (IOException | InterruptedException e) {
+                    // break;
+                    System.out.println(" "+z);
+                }
+            }
+        }).start();
     }
 
     @Override
@@ -161,15 +178,15 @@ public class Controller implements Initializable {
         if(tfLogin.getText().length()>0 && pfPass.getText().length()>0)
             try{
             network.sendMsg("/auth "+tfLogin.getText()+ " "+pfPass.getText());
+            network.setUser(tfLogin.getText());
             tfLogin.clear();
             pfPass.clear();
-
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
     private void writeToLog(String msg) {
-        try (BufferedWriter out = new BufferedWriter(new FileWriter("history_" + network.getNick() + ".txt", true))) {
+        try (BufferedWriter out = new BufferedWriter(new FileWriter("history_" + network.getUser() + ".txt", true))) {
             out.write(msg + "\n");
         } catch (IOException e) {
             e.printStackTrace();
@@ -177,7 +194,7 @@ public class Controller implements Initializable {
     }
 
     private String restoreChatFromLog(){
-        File file=new File("history_" + network.getNick() + ".txt");
+        File file=new File("history_" + network.getUser() + ".txt");
         LinkedList list=new LinkedList();
         StringBuilder str=new StringBuilder();
         if(file.exists())

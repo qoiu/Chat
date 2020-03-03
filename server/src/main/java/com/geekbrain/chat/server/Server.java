@@ -1,5 +1,8 @@
 package com.geekbrain.chat.server;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -8,6 +11,7 @@ import java.util.List;
 
 public class Server {
     private List<ClientHandler> clients;
+    private static final Logger LOGGER= LogManager.getLogger(Server.class);
     private AuthService authService;
 
     public AuthService getAuthService() {
@@ -19,13 +23,13 @@ public class Server {
             authService.start();//просто вывели сообщение что мы ждём очередного пользователя
             clients = new ArrayList<>();//создали 1 массив клиентов...далее ьудем работать с ним
             while (true) {//в цикле ждём новых клиентов
-                System.out.println("Сервер ожидает подключения...");
+                LOGGER.info("Сервер ожидает подключения...");
                 Socket socket = serverSocket.accept();
-                System.out.println("Клиент подключён.");
+                LOGGER.info("Клиент подключён.");
                 new ClientHandler(this, socket);//просто добавили нового клиента(Это совсем не просто!)
             }//добавили, вот и молодцы...ждём следующих
         } catch (IOException e) {
-            System.out.println("Ошибка подключения");
+            LOGGER.warn("Ошибка подключения");
         }
     }
 
