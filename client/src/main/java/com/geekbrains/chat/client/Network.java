@@ -1,5 +1,8 @@
 package com.geekbrains.chat.client;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -9,6 +12,7 @@ public class Network {
     private DataInputStream in;
     private DataOutputStream out;
     Socket socket;
+    private static final Logger LOGGER= LogManager.getLogger(Network.class);
     private String nick,user;
 
     public void setUser(String user) {
